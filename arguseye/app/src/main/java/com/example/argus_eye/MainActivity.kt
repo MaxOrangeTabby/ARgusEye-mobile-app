@@ -7,41 +7,34 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.argus_eye.controller.MainController
+import com.example.argus_eye.model.MainModel
+import com.example.argus_eye.ui.MainView
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var controller: MainController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Model: Data layer
+        val model = MainModel()
+        // Controller: Logic layer
+        controller = MainController(model)
+
         enableEdgeToEdge()
         setContent {
             ArguseyeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    // View: UI layer
+                    MainView(
+                        controller = controller,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ArguseyeTheme {
-        Greeting("Android")
     }
 }
