@@ -1,6 +1,6 @@
-package com.example.argus_eye.controller
+package com.example.argus_eye.data.remote.api
 
-import com.example.argus_eye.model.MainModel
+import com.example.argus_eye.data.model.MainModel
 
 class MainController(private val model: MainModel) {
     fun getAppName(): String {

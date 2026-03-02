@@ -1,4 +1,4 @@
-package com.example.argus_eye.model
+package com.example.argus_eye.data.model
 
 data class MainModel(
     val title: String = "ARgusEye",

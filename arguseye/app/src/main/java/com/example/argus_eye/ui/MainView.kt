@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.argus_eye.controller.MainController
-import com.example.argus_eye.model.MainModel
+import com.example.argus_eye.data.remote.api.MainController
+import com.example.argus_eye.data.model.MainModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 
 @Composable
