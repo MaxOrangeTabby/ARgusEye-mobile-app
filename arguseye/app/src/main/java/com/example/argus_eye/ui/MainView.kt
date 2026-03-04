@@ -7,7 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -128,8 +128,7 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                 HomeCard(
                     topic = "dog",
                     name = "[name]",
-                    timestamp = "2/23 9:00 AM",
-                    showNameInput = true
+                    timestamp = "2/23 9:00 AM"
                 )
             }
             
@@ -144,9 +143,11 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
 fun HomeCard(
     topic: String,
     name: String,
-    timestamp: String,
-    showNameInput: Boolean = false
+    timestamp: String
 ) {
+    var selectedOption by remember { mutableStateOf<Boolean?>(null) }
+    var nameInput by remember { mutableStateOf("") }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,25 +170,40 @@ fun HomeCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // Yes Button
+                val isYesSelected = selectedOption == true
                 Button(
-                    onClick = { },
+                    onClick = { selectedOption = true },
                     shape = RoundedCornerShape(4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isYesSelected) Color(0xFF6750A4) else Color.White,
+                        contentColor = if (isYesSelected) Color.White else Color(0xFF6750A4)
+                    ),
+                    border = if (!isYesSelected) ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFD1D9E0))) else null,
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp)
                 ) {
                     Text("Yes", fontWeight = FontWeight.Bold)
                 }
+                
                 Spacer(modifier = Modifier.width(8.dp))
-                OutlinedButton(
-                    onClick = { },
+                
+                // No Button
+                val isNoSelected = selectedOption == false
+                Button(
+                    onClick = { selectedOption = false },
                     shape = RoundedCornerShape(4.dp),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFD1D9E0))),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isNoSelected) Color(0xFF6750A4) else Color.White,
+                        contentColor = if (isNoSelected) Color.White else Color(0xFF6750A4)
+                    ),
+                    border = if (!isNoSelected) ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFD1D9E0))) else null,
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp)
                 ) {
-                    Text("No", color = Color(0xFF6750A4), fontWeight = FontWeight.Bold)
+                    Text("No", fontWeight = FontWeight.Bold)
                 }
+                
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = timestamp,
@@ -198,7 +214,7 @@ fun HomeCard(
                 )
             }
 
-            if (showNameInput) {
+            if (selectedOption == false) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "Enter their name",
@@ -209,8 +225,8 @@ fun HomeCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
                     placeholder = { Text("Example: Peter", color = Color(0xFFD1D9E0)) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(4.dp),
