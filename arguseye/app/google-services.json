@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "155984001396",
+    "project_id": "argus-eye-mobile",
+    "storage_bucket": "argus-eye-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155984001396:android:64af025db88dc7ba125421",
+        "android_client_info": {
+          "package_name": "com.example.argus_eye"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155984001396-655i9v85vovagrtqrb20brg87d4sqh7v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.argus_eye",
+            "certificate_hash": "53ae3348c7df8bc977e974d36b701b2dba0d95cb"
+          }
+        },
+        {
+          "client_id": "155984001396-fhnbl68l72n01tknl3ffi9cuidesem7o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAV32HbfWAFLd2sd5vHQf8JsyzYbDgXeQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155984001396-fhnbl68l72n01tknl3ffi9cuidesem7o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

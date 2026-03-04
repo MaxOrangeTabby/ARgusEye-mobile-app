@@ -17,10 +17,16 @@ import androidx.compose.ui.unit.dp
 import com.example.argus_eye.data.remote.api.MainController
 import com.example.argus_eye.data.model.MainModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
+import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainView(controller: MainController, modifier: Modifier = Modifier) {
+fun MainView(
+    controller: MainController, 
+    user: FirebaseUser?,
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -34,6 +40,11 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                                 color = Color(0xFF5A6978)
                             )
                         )
+                    },
+                    actions = {
+                        IconButton(onClick = onLogoutClick) {
+                            Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color(0xFF5A6978))
+                        }
                     }
                 )
                 HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
@@ -97,10 +108,11 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            val displayName = user?.displayName ?: user?.email?.split("@")?.get(0) ?: "User"
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Welcome [name]!",
+                    text = "Welcome $displayName!",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF5A6978)
@@ -111,7 +123,7 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
             item {
                 HomeCard(
                     topic = "fish",
-                    name = "[name]",
+                    name = displayName,
                     timestamp = "2/23 1:00 PM"
                 )
             }
@@ -119,7 +131,7 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
             item {
                 HomeCard(
                     topic = "dog",
-                    name = "[name]",
+                    name = displayName,
                     timestamp = "2/23 12:00 PM"
                 )
             }
@@ -127,7 +139,7 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
             item {
                 HomeCard(
                     topic = "dog",
-                    name = "[name]",
+                    name = displayName,
                     timestamp = "2/23 9:00 AM",
                     showNameInput = true
                 )
@@ -229,6 +241,6 @@ fun MainViewPreview() {
     val model = MainModel("Preview Eye", "MVC Preview")
     val controller = MainController(model)
     ArguseyeTheme {
-        MainView(controller = controller)
+        MainView(controller = controller, user = null, onLogoutClick = {})
     }
 }

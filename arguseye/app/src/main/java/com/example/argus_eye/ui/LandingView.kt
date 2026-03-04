@@ -17,7 +17,11 @@ import androidx.compose.ui.unit.dp
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 
 @Composable
-fun LandingView(onEnterApp: () -> Unit, modifier: Modifier = Modifier) {
+fun LandingView(
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,7 +48,7 @@ fun LandingView(onEnterApp: () -> Unit, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = "Welcome to ARgusAI",
+            text = "Welcome to ARgusEye",
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF37474F)
@@ -62,8 +66,9 @@ fun LandingView(onEnterApp: () -> Unit, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(64.dp))
 
+        // Log in Button
         Button(
-            onClick = onEnterApp,
+            onClick = onLoginClick,
             modifier = Modifier
                 .fillMaxWidth(0.6f)
                 .height(50.dp),
@@ -73,8 +78,28 @@ fun LandingView(onEnterApp: () -> Unit, modifier: Modifier = Modifier) {
             shape = MaterialTheme.shapes.extraSmall
         ) {
             Text(
-                text = "Enter the App",
+                text = "Log in",
                 color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Register Button
+        OutlinedButton(
+            onClick = onRegisterClick,
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(50.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color(0xFF6750A4)
+            ),
+            shape = MaterialTheme.shapes.extraSmall,
+            border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFEADDFF)))
+        ) {
+            Text(
+                text = "Register",
                 fontWeight = FontWeight.Bold
             )
         }
@@ -85,6 +110,6 @@ fun LandingView(onEnterApp: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun LandingViewPreview() {
     ArguseyeTheme {
-        LandingView(onEnterApp = {})
+        LandingView(onLoginClick = {}, onRegisterClick = {})
     }
 }
