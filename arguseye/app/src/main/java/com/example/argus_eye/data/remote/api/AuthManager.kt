@@ -2,6 +2,7 @@ package com.example.argus_eye.data.remote.api
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -35,19 +36,28 @@ class AuthManager(private val context: Context) {
                 .addCredentialOption(googleIdOption)
                 .build()
 
+            Log.d("AuthManager", "Requesting Google credential...")
             val result = credentialManager.getCredential(context, request)
             val credential = result.credential
 
-            if (credential is GoogleIdTokenCredential) {
-                val googleIdToken = credential.idToken
+            // Use the constant string for comparison to avoid metadata mismatch issues
+            if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                Log.d("AuthManager", "Received Google ID token. Signing into Firebase...")
+                
+                // Manually create the credential from the result data
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                val googleIdToken = googleIdTokenCredential.idToken
+
                 val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
                 auth.signInWithCredential(firebaseCredential).await()
+                Log.d("AuthManager", "Firebase Sign-In successful.")
                 true
             } else {
+                Log.e("AuthManager", "Received unexpected credential type: ${credential.type}")
                 false
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("AuthManager", "Google Sign-In error", e)
             false
         }
     }
@@ -55,13 +65,12 @@ class AuthManager(private val context: Context) {
     suspend fun signInWithGithub(activity: Activity): Boolean {
         return try {
             val provider = OAuthProvider.newBuilder("github.com")
-            // Optional: Add scopes
             provider.scopes = listOf("user:email")
             
             auth.startActivityForSignInWithProvider(activity, provider.build()).await()
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("AuthManager", "Github Sign-In error", e)
             false
         }
     }
