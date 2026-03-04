@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -13,18 +15,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.argus_eye.data.remote.api.MainController
 import com.example.argus_eye.data.model.MainModel
 import com.example.argus_eye.data.model.HomeCardModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
+import com.example.argus_eye.controller.ConversationHistController
+import com.example.argus_eye.data.model.Conversation
+
+enum class Screen {
+    Home,
+    Contacts,
+    Conversations,
+    You
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView(controller: MainController, modifier: Modifier = Modifier) {
+    var currentScreen by remember { mutableStateOf(Screen.Home) }
+
     val homeCards = remember {
-        listOf(
+        mutableStateListOf(
             HomeCardModel("fish", "Alice", "2/23 1:00 PM"),
             HomeCardModel("dog", "Bob", "2/23 12:00 PM"),
             HomeCardModel("cats", "Charlie", "2/23 9:00 AM"),
@@ -38,22 +52,6 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
 
     Scaffold(
         modifier = modifier,
-        topBar = {
-            Column {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            "Home",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF5A6978)
-                            )
-                        )
-                    }
-                )
-                HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
-            }
-        },
         bottomBar = {
             NavigationBar(
                 containerColor = Color.White,
@@ -62,8 +60,8 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") },
-                    selected = true,
-                    onClick = { },
+                    selected = currentScreen == Screen.Home,
+                    onClick = { currentScreen = Screen.Home },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF6750A4),
                         selectedTextColor = Color(0xFF6750A4),
@@ -75,39 +73,84 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.People, contentDescription = "Contacts") },
                     label = { Text("Contacts") },
-                    selected = false,
-                    onClick = { },
+                    selected = currentScreen == Screen.Contacts,
+                    onClick = { currentScreen = Screen.Contacts },
                     colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF6750A4),
+                        selectedTextColor = Color(0xFF6750A4),
                         unselectedIconColor = Color(0xFF5A6978),
-                        unselectedTextColor = Color(0xFF5A6978)
+                        unselectedTextColor = Color(0xFF5A6978),
+                        indicatorColor = Color.Transparent
                     )
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.ChatBubble, contentDescription = "Conversations") },
                     label = { Text("Conversations") },
-                    selected = false,
-                    onClick = { },
+                    selected = currentScreen == Screen.Conversations,
+                    onClick = { currentScreen = Screen.Conversations },
                     colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF6750A4),
+                        selectedTextColor = Color(0xFF6750A4),
                         unselectedIconColor = Color(0xFF5A6978),
-                        unselectedTextColor = Color(0xFF5A6978)
+                        unselectedTextColor = Color(0xFF5A6978),
+                        indicatorColor = Color.Transparent
                     )
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.AccountCircle, contentDescription = "You") },
                     label = { Text("You") },
-                    selected = false,
-                    onClick = { },
+                    selected = currentScreen == Screen.You,
+                    onClick = { currentScreen = Screen.You },
                     colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF6750A4),
+                        selectedTextColor = Color(0xFF6750A4),
                         unselectedIconColor = Color(0xFF5A6978),
-                        unselectedTextColor = Color(0xFF5A6978)
+                        unselectedTextColor = Color(0xFF5A6978),
+                        indicatorColor = Color.Transparent
                     )
                 )
             }
         }
     ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            when (currentScreen) {
+                Screen.Home -> HomeScreen(homeCards)
+                Screen.Conversations -> {
+                    val conversationController = remember { ConversationHistController() }
+                    ConversationListScreen(
+                        conversations = conversationController.getConversations(),
+                        onViewTranscription = { /* Handle transcription view */ }
+                    )
+                }
+                else -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Screen: ${currentScreen.name}")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(homeCards: MutableList<HomeCardModel>) {
+    Column {
+        CenterAlignedTopAppBar(
+            title = {
+                Text(
+                    "Home",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF5A6978)
+                    )
+                )
+            }
+        )
+        HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
+        
         LazyColumn(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -123,8 +166,11 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                 )
             }
 
-            items(homeCards) { cardData ->
-                HomeCard(data = cardData)
+            items(homeCards, key = { it.topic + it.timestamp }) { cardData ->
+                HomeCard(
+                    data = cardData,
+                    onDismiss = { homeCards.remove(cardData) }
+                )
             }
             
             item {
@@ -136,10 +182,12 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
 
 @Composable
 fun HomeCard(
-    data: HomeCardModel
+    data: HomeCardModel,
+    onDismiss: () -> Unit
 ) {
     var selectedOption by remember { mutableStateOf<Boolean?>(false) }
     var nameInput by remember { mutableStateOf("") }
+    val isEnterEnabled = selectedOption == true || (selectedOption == false && nameInput.isNotBlank())
 
     Card(
         modifier = Modifier
@@ -225,7 +273,35 @@ fun HomeCard(
                     shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color(0xFFD1D9E0)
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (isEnterEnabled) {
+                                onDismiss()
+                            }
+                        }
                     )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Button(
+                onClick = onDismiss,
+                enabled = isEnterEnabled,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6750A4),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF6750A4).copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(4.dp)
+            ) {
+                Text(
+                    text = "ENTER",
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
