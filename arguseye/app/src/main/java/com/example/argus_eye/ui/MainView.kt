@@ -22,6 +22,7 @@ import com.example.argus_eye.data.remote.api.MainController
 import com.example.argus_eye.data.model.MainModel
 import com.example.argus_eye.data.model.HomeCardModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
+import com.google.firebase.auth.FirebaseUser
 import com.example.argus_eye.controller.ConversationHistController
 import com.example.argus_eye.data.model.Conversation
 
@@ -34,7 +35,12 @@ enum class Screen {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainView(controller: MainController, modifier: Modifier = Modifier) {
+fun MainView(
+    controller: MainController,
+    user: FirebaseUser?,
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var currentScreen by remember { mutableStateOf(Screen.Home) }
 
     val homeCards = remember {
@@ -52,6 +58,27 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            Column {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            "Home",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF5A6978)
+                            )
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = onLogoutClick) {
+                            Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color(0xFF5A6978))
+                        }
+                    }
+                )
+                HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
+            }
+        },
         bottomBar = {
             NavigationBar(
                 containerColor = Color.White,
@@ -114,7 +141,7 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (currentScreen) {
-                Screen.Home -> HomeScreen(homeCards)
+                Screen.Home -> HomeScreen(homeCards, user)
                 Screen.Conversations -> {
                     val conversationController = remember { ConversationHistController() }
                     ConversationListScreen(
@@ -134,7 +161,7 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(homeCards: MutableList<HomeCardModel>) {
+fun HomeScreen(homeCards: MutableList<HomeCardModel>, user: FirebaseUser?) {
     Column {
         CenterAlignedTopAppBar(
             title = {
@@ -148,7 +175,7 @@ fun HomeScreen(homeCards: MutableList<HomeCardModel>) {
             }
         )
         HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
-        
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -156,9 +183,10 @@ fun HomeScreen(homeCards: MutableList<HomeCardModel>) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
+                val displayName = user?.displayName ?: user?.email?.split("@")?.get(0) ?: "User"
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Welcome [name]!",
+                    text = "Welcome $displayName!",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF5A6978)
@@ -226,9 +254,9 @@ fun HomeCard(
                 ) {
                     Text("Yes", fontWeight = FontWeight.Bold)
                 }
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 // No Button
                 val isNoSelected = selectedOption == false
                 Button(
@@ -244,7 +272,7 @@ fun HomeCard(
                 ) {
                     Text("No", fontWeight = FontWeight.Bold)
                 }
-                
+
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = data.timestamp,
@@ -286,7 +314,7 @@ fun HomeCard(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Button(
                 onClick = onDismiss,
                 enabled = isEnterEnabled,
@@ -314,6 +342,6 @@ fun MainViewPreview() {
     val model = MainModel("Preview Eye", "MVC Preview")
     val controller = MainController(model)
     ArguseyeTheme {
-        MainView(controller = controller)
+        MainView(controller = controller, user = null, onLogoutClick = {})
     }
 }
