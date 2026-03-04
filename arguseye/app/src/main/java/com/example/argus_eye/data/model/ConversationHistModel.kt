@@ -4,5 +4,5 @@ data class Conversation(
     val uid: String,
     val timestamp: String,
     val participants: List<String>,
-    val notes: List<String>
+    val notes: List<String>   // ← add this
 )
