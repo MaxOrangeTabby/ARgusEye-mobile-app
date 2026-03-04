@@ -3,6 +3,7 @@ package com.example.argus_eye.ui
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,11 +17,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.argus_eye.data.remote.api.MainController
 import com.example.argus_eye.data.model.MainModel
+import com.example.argus_eye.data.model.HomeCardModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView(controller: MainController, modifier: Modifier = Modifier) {
+    val homeCards = remember {
+        listOf(
+            HomeCardModel("fish", "Alice", "2/23 1:00 PM"),
+            HomeCardModel("dog", "Bob", "2/23 12:00 PM"),
+            HomeCardModel("cats", "Charlie", "2/23 9:00 AM"),
+            HomeCardModel("birds", "David", "2/22 4:00 PM"),
+            HomeCardModel("lizards", "Eve", "2/22 2:30 PM"),
+            HomeCardModel("hamsters", "Frank", "2/22 10:00 AM"),
+            HomeCardModel("snakes", "Grace", "2/21 6:00 PM"),
+            HomeCardModel("turtles", "Heidi", "2/21 11:00 AM")
+        )
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -108,28 +123,8 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
                 )
             }
 
-            item {
-                HomeCard(
-                    topic = "fish",
-                    name = "[name]",
-                    timestamp = "2/23 1:00 PM"
-                )
-            }
-
-            item {
-                HomeCard(
-                    topic = "dog",
-                    name = "[name]",
-                    timestamp = "2/23 12:00 PM"
-                )
-            }
-
-            item {
-                HomeCard(
-                    topic = "dog",
-                    name = "[name]",
-                    timestamp = "2/23 9:00 AM"
-                )
+            items(homeCards) { cardData ->
+                HomeCard(data = cardData)
             }
             
             item {
@@ -141,11 +136,9 @@ fun MainView(controller: MainController, modifier: Modifier = Modifier) {
 
 @Composable
 fun HomeCard(
-    topic: String,
-    name: String,
-    timestamp: String
+    data: HomeCardModel
 ) {
-    var selectedOption by remember { mutableStateOf<Boolean?>(null) }
+    var selectedOption by remember { mutableStateOf<Boolean?>(false) }
     var nameInput by remember { mutableStateOf("") }
 
     Card(
@@ -159,7 +152,7 @@ fun HomeCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Was your recent conversation about \"$topic\" with $name?",
+                text = "Was your recent conversation about \"${data.topic}\" with ${data.name}?",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF5A6978)
@@ -206,7 +199,7 @@ fun HomeCard(
                 
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = timestamp,
+                    text = data.timestamp,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF5A6978)
