@@ -25,6 +25,7 @@ import com.example.argus_eye.ui.theme.ArguseyeTheme
 import com.google.firebase.auth.FirebaseUser
 import com.example.argus_eye.controller.ConversationHistController
 import com.example.argus_eye.data.model.Conversation
+import com.example.argus_eye.data.remote.api.controller.ContactsController
 
 enum class Screen {
     Home,
@@ -63,7 +64,12 @@ fun MainView(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            "Home",
+                            when (currentScreen) {
+                                Screen.Home -> "Home"
+                                Screen.Contacts -> "Contacts"
+                                Screen.Conversations -> "Conversations"
+                                Screen.You -> "You"
+                            },
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF5A6978)
@@ -142,6 +148,10 @@ fun MainView(
         Box(modifier = Modifier.padding(innerPadding)) {
             when (currentScreen) {
                 Screen.Home -> HomeScreen(homeCards, user)
+                Screen.Contacts -> {
+                    val contactsController = remember { ContactsController() }
+                    ContactsScreen(contacts = contactsController.getContacts())
+                }
                 Screen.Conversations -> {
                     val conversationController = remember { ConversationHistController() }
                     ConversationListScreen(

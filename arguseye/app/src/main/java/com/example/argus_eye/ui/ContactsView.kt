@@ -31,7 +31,7 @@ fun ContactsScreen(contacts: List<Contact>) {
     val groupedContacts = filteredContacts.groupBy { it.name.first().uppercaseChar() }
     val alphabet = ('A'..'Z').toList()
     val listState = rememberLazyListState()
-    val coroutineScope = rememberLazyScope()
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Search Bar
@@ -98,13 +98,14 @@ fun ContactsScreen(contacts: List<Contact>) {
                             color = Color(0xFF5A6978)
                         ),
                         modifier = Modifier.clickable {
-                            val index = groupedContacts.keys.sorted().indexOfFirst { it >= letter }
-                            if (index != -1) {
-                                // Simple jump logic: find the first item of the group
+                            val sortedKeys = groupedContacts.keys.sorted()
+                            val key = sortedKeys.find { it >= letter }
+                            if (key != null) {
+                                val index = sortedKeys.indexOf(key)
                                 var itemIndex = 0
-                                groupedContacts.keys.sorted().take(index).forEach { key ->
+                                for (i in 0 until index) {
                                     itemIndex += 1 // Header
-                                    itemIndex += groupedContacts[key]!!.size
+                                    itemIndex += groupedContacts[sortedKeys[i]]!!.size
                                 }
                                 coroutineScope.launch {
                                     listState.animateScrollToItem(itemIndex)
