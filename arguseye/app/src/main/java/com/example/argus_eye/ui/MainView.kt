@@ -163,19 +163,6 @@ fun MainView(
 @Composable
 fun HomeScreen(homeCards: MutableList<HomeCardModel>, user: FirebaseUser?) {
     Column {
-        CenterAlignedTopAppBar(
-            title = {
-                Text(
-                    "Home",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF5A6978)
-                    )
-                )
-            }
-        )
-        HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -200,7 +187,7 @@ fun HomeScreen(homeCards: MutableList<HomeCardModel>, user: FirebaseUser?) {
                     onDismiss = { homeCards.remove(cardData) }
                 )
             }
-            
+
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
