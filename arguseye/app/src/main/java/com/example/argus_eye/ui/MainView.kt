@@ -25,6 +25,7 @@ import com.example.argus_eye.ui.theme.ArguseyeTheme
 import com.google.firebase.auth.FirebaseUser
 import com.example.argus_eye.controller.ConversationHistController
 import com.example.argus_eye.data.model.Conversation
+import com.example.argus_eye.data.remote.api.controller.ContactsController
 
 enum class Screen {
     Home,
@@ -85,7 +86,7 @@ fun MainView(
                 contentColor = Color(0xFF6750A4)
             ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.LocalCafe, contentDescription = "Home") },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") },
                     selected = currentScreen == Screen.Home,
                     onClick = { currentScreen = Screen.Home },
@@ -98,7 +99,7 @@ fun MainView(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.RecentActors, contentDescription = "Contacts") },
+                    icon = { Icon(Icons.Default.People, contentDescription = "Contacts") },
                     label = { Text("Contacts") },
                     selected = currentScreen == Screen.Contacts,
                     onClick = { currentScreen = Screen.Contacts },
@@ -111,7 +112,7 @@ fun MainView(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Chat, contentDescription = "Conversations") },
+                    icon = { Icon(Icons.Default.ChatBubble, contentDescription = "Conversations") },
                     label = { Text("Conversations") },
                     selected = currentScreen == Screen.Conversations,
                     onClick = { currentScreen = Screen.Conversations },
@@ -124,7 +125,7 @@ fun MainView(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "You") },
+                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = "You") },
                     label = { Text("You") },
                     selected = currentScreen == Screen.You,
                     onClick = { currentScreen = Screen.You },
@@ -142,6 +143,10 @@ fun MainView(
         Box(modifier = Modifier.padding(innerPadding)) {
             when (currentScreen) {
                 Screen.Home -> HomeScreen(homeCards, user)
+                Screen.Contacts -> {
+                    val contactsController = remember { ContactsController() }
+                    ContactsScreen(contacts = contactsController.getContacts())
+                }
                 Screen.Conversations -> {
                     val conversationController = remember { ConversationHistController() }
                     ConversationListScreen(
