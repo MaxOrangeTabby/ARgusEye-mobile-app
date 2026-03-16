@@ -62,18 +62,18 @@ fun MainView(
             Column {
                 CenterAlignedTopAppBar(
                     title = {
+                        val title = if (currentScreen == Screen.You) {
+                            user?.displayName ?: user?.email?.split("@")?.get(0) ?: "User"
+                        } else {
+                            currentScreen.name
+                        }
                         Text(
-                            "Home",
+                            title,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF5A6978)
                             )
                         )
-                    },
-                    actions = {
-                        IconButton(onClick = onLogoutClick) {
-                            Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color(0xFF5A6978))
-                        }
                     }
                 )
                 HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
@@ -85,7 +85,7 @@ fun MainView(
                 contentColor = Color(0xFF6750A4)
             ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    icon = { Icon(Icons.Default.LocalCafe, contentDescription = "Home") },
                     label = { Text("Home") },
                     selected = currentScreen == Screen.Home,
                     onClick = { currentScreen = Screen.Home },
@@ -98,7 +98,7 @@ fun MainView(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.People, contentDescription = "Contacts") },
+                    icon = { Icon(Icons.Default.RecentActors, contentDescription = "Contacts") },
                     label = { Text("Contacts") },
                     selected = currentScreen == Screen.Contacts,
                     onClick = { currentScreen = Screen.Contacts },
@@ -111,7 +111,7 @@ fun MainView(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.ChatBubble, contentDescription = "Conversations") },
+                    icon = { Icon(Icons.Default.Chat, contentDescription = "Conversations") },
                     label = { Text("Conversations") },
                     selected = currentScreen == Screen.Conversations,
                     onClick = { currentScreen = Screen.Conversations },
@@ -124,7 +124,7 @@ fun MainView(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = "You") },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "You") },
                     label = { Text("You") },
                     selected = currentScreen == Screen.You,
                     onClick = { currentScreen = Screen.You },
@@ -148,6 +148,9 @@ fun MainView(
                         conversations = conversationController.getConversations(),
                         onViewTranscription = { /* Handle transcription view */ }
                     )
+                }
+                Screen.You -> {
+                    ProfileScreen(user = user, onLogoutClick = onLogoutClick)
                 }
                 else -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
