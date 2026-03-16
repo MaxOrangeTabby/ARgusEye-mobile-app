@@ -63,23 +63,18 @@ fun MainView(
             Column {
                 CenterAlignedTopAppBar(
                     title = {
+                        val title = if (currentScreen == Screen.You) {
+                            user?.displayName ?: user?.email?.split("@")?.get(0) ?: "User"
+                        } else {
+                            currentScreen.name
+                        }
                         Text(
-                            when (currentScreen) {
-                                Screen.Home -> "Home"
-                                Screen.Contacts -> "Contacts"
-                                Screen.Conversations -> "Conversations"
-                                Screen.You -> "You"
-                            },
+                            title,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF5A6978)
                             )
                         )
-                    },
-                    actions = {
-                        IconButton(onClick = onLogoutClick) {
-                            Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color(0xFF5A6978))
-                        }
                     }
                 )
                 HorizontalDivider(color = Color(0xFFFFD54F), thickness = 2.dp)
@@ -158,6 +153,9 @@ fun MainView(
                         conversations = conversationController.getConversations(),
                         onViewTranscription = { /* Handle transcription view */ }
                     )
+                }
+                Screen.You -> {
+                    ProfileScreen(user = user, onLogoutClick = onLogoutClick)
                 }
                 else -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
