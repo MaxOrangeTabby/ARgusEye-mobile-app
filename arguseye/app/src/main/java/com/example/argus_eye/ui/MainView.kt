@@ -24,7 +24,6 @@ import com.example.argus_eye.data.model.HomeCardModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 import com.google.firebase.auth.FirebaseUser
 import com.example.argus_eye.controller.ConversationHistController
-import com.example.argus_eye.data.model.Conversation
 import com.example.argus_eye.data.remote.api.controller.ContactsController
 
 enum class Screen {
@@ -145,7 +144,15 @@ fun MainView(
                 Screen.Home -> HomeScreen(homeCards, user)
                 Screen.Contacts -> {
                     val contactsController = remember { ContactsController() }
-                    ContactsScreen(contacts = contactsController.getContacts())
+                    LaunchedEffect(Unit) {
+                        contactsController.fetchContacts()
+                    }
+                    ContactsScreen(
+                        contactModels = contactsController.contacts.value,
+                        isLoading = contactsController.isLoading.value,
+                        error = contactsController.error.value,
+                        onRetry = { contactsController.fetchContacts() }
+                    )
                 }
                 Screen.Conversations -> {
                     val conversationController = remember { ConversationHistController() }
@@ -156,11 +163,6 @@ fun MainView(
                 }
                 Screen.You -> {
                     ProfileScreen(user = user, onLogoutClick = onLogoutClick)
-                }
-                else -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Screen: ${currentScreen.name}")
-                    }
                 }
             }
         }
