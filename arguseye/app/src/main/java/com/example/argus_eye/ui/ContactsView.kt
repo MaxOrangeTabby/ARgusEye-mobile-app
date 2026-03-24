@@ -1,5 +1,6 @@
 package com.example.argus_eye.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,7 +44,7 @@ fun ContactsScreen(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = { Text("Enter a name, e.g. John", color = Color(0xFFD1D9E0)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF5A6978) ) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF5A6978)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
