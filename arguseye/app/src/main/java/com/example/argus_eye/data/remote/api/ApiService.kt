@@ -1,9 +1,23 @@
 package com.example.argus_eye.data.remote.api
 
 import com.example.argus_eye.data.model.ContactModel
+import com.example.argus_eye.data.model.LabelRequest
+import com.example.argus_eye.data.model.LabelResponse
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ApiService {
     @GET("api/people")
     suspend fun getContacts(): List<ContactModel>
+
+    @GET("api/people/unlabeled")
+    suspend fun getUnlabeledPeople(): List<ContactModel>
+
+    @POST("api/people/{id}/label")
+    suspend fun labelPerson(
+        @Path("id") personId: Int,
+        @Body request: LabelRequest
+    ): LabelResponse
 }

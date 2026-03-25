@@ -21,10 +21,12 @@ import androidx.compose.ui.unit.dp
 import com.example.argus_eye.data.remote.api.MainController
 import com.example.argus_eye.data.model.MainModel
 import com.example.argus_eye.data.model.HomeCardModel
+import com.example.argus_eye.data.model.ContactModel
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 import com.google.firebase.auth.FirebaseUser
 import com.example.argus_eye.controller.ConversationHistController
 import com.example.argus_eye.data.remote.api.controller.ContactsController
+import com.example.argus_eye.data.remote.api.controller.HomeController
 
 enum class Screen {
     Home,
@@ -42,19 +44,6 @@ fun MainView(
     modifier: Modifier = Modifier
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Home) }
-
-    val homeCards = remember {
-        mutableStateListOf(
-            HomeCardModel("fish", "Alice", "2/23 1:00 PM"),
-            HomeCardModel("dog", "Bob", "2/23 12:00 PM"),
-            HomeCardModel("cats", "Charlie", "2/23 9:00 AM"),
-            HomeCardModel("birds", "David", "2/22 4:00 PM"),
-            HomeCardModel("lizards", "Eve", "2/22 2:30 PM"),
-            HomeCardModel("hamsters", "Frank", "2/22 10:00 AM"),
-            HomeCardModel("snakes", "Grace", "2/21 6:00 PM"),
-            HomeCardModel("turtles", "Heidi", "2/21 11:00 AM")
-        )
-    }
 
     Scaffold(
         modifier = modifier,
@@ -141,7 +130,21 @@ fun MainView(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (currentScreen) {
-                Screen.Home -> HomeScreen(homeCards, user)
+                Screen.Home -> {
+                    val homeController = remember { HomeController() }
+                    LaunchedEffect(Unit) {
+                        homeController.fetchUnlabeledPeople()
+                    }
+                    HomeScreen(
+                        unlabeledPeople = homeController.unlabeledPeople.value,
+                        isLoading = homeController.isLoading.value,
+                        error = homeController.error.value,
+                        user = user,
+                        onRetry = { homeController.fetchUnlabeledPeople() },
+                        onLabel = { id, name -> homeController.labelPerson(id, name) {} },
+                        onDismiss = { id -> homeController.dismissPerson(id) }
+                    )
+                }
                 Screen.Contacts -> {
                     val contactsController = remember { ContactsController() }
                     LaunchedEffect(Unit) {
@@ -171,35 +174,59 @@ fun MainView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(homeCards: MutableList<HomeCardModel>, user: FirebaseUser?) {
-    Column {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                val displayName = user?.displayName ?: user?.email?.split("@")?.get(0) ?: "User"
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Welcome $displayName!",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF5A6978)
+fun HomeScreen(
+    unlabeledPeople: List<ContactModel>,
+    isLoading: Boolean,
+    error: String?,
+    user: FirebaseUser?,
+    onRetry: () -> Unit,
+    onLabel: (Int, String) -> Unit,
+    onDismiss: (Int) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (error != null) {
+            Column(
+                modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Error: $error", color = Color.Red)
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = onRetry) {
+                    Text("Retry")
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    val displayName = user?.displayName ?: user?.email?.split("@")?.get(0) ?: "User"
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Welcome $displayName!",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5A6978)
+                        )
                     )
-                )
-            }
+                }
 
-            items(homeCards, key = { it.topic + it.timestamp }) { cardData ->
-                HomeCard(
-                    data = cardData,
-                    onDismiss = { homeCards.remove(cardData) }
-                )
-            }
+                items(unlabeledPeople, key = { it.id }) { person ->
+                    HomeCard(
+                        person = person,
+                        onLabel = { name -> onLabel(person.id, name) },
+                        onDismiss = { onDismiss(person.id) }
+                    )
+                }
 
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
     }
@@ -207,10 +234,11 @@ fun HomeScreen(homeCards: MutableList<HomeCardModel>, user: FirebaseUser?) {
 
 @Composable
 fun HomeCard(
-    data: HomeCardModel,
+    person: ContactModel,
+    onLabel: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedOption by remember { mutableStateOf<Boolean?>(false) }
+    var selectedOption by remember { mutableStateOf<Boolean?>(null) }
     var nameInput by remember { mutableStateOf("") }
     val isEnterEnabled = selectedOption == true || (selectedOption == false && nameInput.isNotBlank())
 
@@ -225,7 +253,7 @@ fun HomeCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Was your recent conversation about \"${data.topic}\" with ${data.name}?",
+                text = "Was your recent conversation with ${person.name}?",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF5A6978)
@@ -271,13 +299,15 @@ fun HomeCard(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = data.timestamp,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF5A6978)
+                person.lastSeen?.let {
+                    Text(
+                        text = it.split("T")[0], // Simple date display
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5A6978)
+                        )
                     )
-                )
+                }
             }
 
             if (selectedOption == false) {
@@ -303,7 +333,8 @@ fun HomeCard(
                     keyboardActions = KeyboardActions(
                         onDone = {
                             if (isEnterEnabled) {
-                                onDismiss()
+                                if (selectedOption == true) onLabel(person.name)
+                                else onLabel(nameInput)
                             }
                         }
                     )
@@ -313,7 +344,10 @@ fun HomeCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = onDismiss,
+                onClick = {
+                    if (selectedOption == true) onLabel(person.name)
+                    else onLabel(nameInput)
+                },
                 enabled = isEnterEnabled,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
