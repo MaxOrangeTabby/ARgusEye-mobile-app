@@ -14,13 +14,13 @@ object RetrofitClient {
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val user = FirebaseAuth.getInstance().currentUser
-        
+
         val requestBuilder = originalRequest.newBuilder()
-        
+
         if (user != null) {
             try {
-                // Synchronously get the token. 
-                // Note: Interceptor.intercept runs on a background thread (OkHttp thread pool), 
+                // Synchronously get the token.
+                // Note: Interceptor.intercept runs on a background thread (OkHttp thread pool),
                 // so this synchronous wait is generally acceptable.
                 val task = user.getIdToken(false)
                 val tokenResult = Tasks.await(task)
@@ -32,7 +32,7 @@ object RetrofitClient {
                 e.printStackTrace()
             }
         }
-        
+
         chain.proceed(requestBuilder.build())
     }
 
