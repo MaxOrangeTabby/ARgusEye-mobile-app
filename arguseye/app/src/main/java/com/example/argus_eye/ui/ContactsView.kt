@@ -1,6 +1,5 @@
 package com.example.argus_eye.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,7 +25,8 @@ fun ContactsScreen(
     contactModels: List<ContactModel>,
     isLoading: Boolean = false,
     error: String? = null,
-    onRetry: () -> Unit = {}
+    onRetry: () -> Unit = {},
+    onContactClick: (ContactModel) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredContacts = contactModels.filter {
@@ -44,7 +44,7 @@ fun ContactsScreen(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = { Text("Enter a name, e.g. John", color = Color(0xFFD1D9E0)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF5A6978)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF5A6978) ) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -95,7 +95,7 @@ fun ContactsScreen(
                                 }
                             }
                             items(groupedContacts[initial]!!) { contact ->
-                                ContactItem(contact)
+                                ContactItem(contact, onContactClick)
                             }
                         }
                     }
@@ -142,11 +142,11 @@ fun ContactsScreen(
 }
 
 @Composable
-fun ContactItem(contactModel: ContactModel) {
+fun ContactItem(contactModel: ContactModel, onClick: (ContactModel) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Handle contact click */ }
+            .clickable { onClick(contactModel) }
             .padding(horizontal = 32.dp, vertical = 12.dp)
     ) {
         Text(
