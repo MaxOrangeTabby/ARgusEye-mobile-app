@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +27,8 @@ fun ContactsScreen(
     isLoading: Boolean = false,
     error: String? = null,
     onRetry: () -> Unit = {},
-    onContactClick: (ContactModel) -> Unit = {}
+    onContactClick: (ContactModel) -> Unit = {},
+    onRefresh: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredContacts = contactModels.filter {
@@ -57,85 +59,95 @@ fun ContactsScreen(
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (error != null) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Error: $error", color = Color.Red)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = onRetry) {
-                        Text("Retry")
-                    }
-                }
-            } else {
-                Row(modifier = Modifier.fillMaxSize()) {
-                    // Contacts List
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(bottom = 16.dp)
+            PullToRefreshBox(
+                isRefreshing = isLoading,
+                onRefresh = onRefresh,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (error != null && contactModels.isEmpty()) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        groupedContacts.keys.sorted().forEach { initial ->
-                            item {
-                                Column {
-                                    Text(
-                                        text = initial.toString(),
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF5A6978)
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    )
-                                    HorizontalDivider(color = Color(0xFFD1D9E0), thickness = 1.dp)
-                                }
-                            }
-                            items(groupedContacts[initial]!!) { contact ->
-                                ContactItem(contact, onContactClick)
-                            }
+                        Text(text = "Error: $error", color = Color.Red)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = onRetry) {
+                            Text("Retry")
                         }
                     }
-
-                    // Alphabet Index
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(24.dp)
-                            .padding(vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        alphabet.forEach { letter ->
-                            Text(
-                                text = letter.toString(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF5A6978)
-                                ),
-                                modifier = Modifier.clickable {
-                                    val sortedKeys = groupedContacts.keys.sorted()
-                                    val key = sortedKeys.find { it >= letter }
-                                    if (key != null) {
-                                        val index = sortedKeys.indexOf(key)
-                                        var itemIndex = 0
-                                        for (i in 0 until index) {
-                                            itemIndex += 1 // Header
-                                            itemIndex += groupedContacts[sortedKeys[i]]!!.size
-                                        }
-                                        coroutineScope.launch {
-                                            listState.animateScrollToItem(itemIndex)
-                                        }
+                } else {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        // Contacts List
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                            groupedContacts.keys.sorted().forEach { initial ->
+                                item {
+                                    Column {
+                                        Text(
+                                            text = initial.toString(),
+                                            style = MaterialTheme.typography.bodyLarge.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF5A6978)
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        )
+                                        HorizontalDivider(color = Color(0xFFD1D9E0), thickness = 1.dp)
                                     }
                                 }
-                            )
+                                items(groupedContacts[initial]!!) { contact ->
+                                    ContactItem(contact, onContactClick)
+                                }
+                            }
+                        }
+
+                        // Alphabet Index
+                        Column(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(24.dp)
+                                .padding(vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            alphabet.forEach { letter ->
+                                Text(
+                                    text = letter.toString(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF5A6978)
+                                    ),
+                                    modifier = Modifier.clickable {
+                                        val sortedKeys = groupedContacts.keys.sorted()
+                                        val key = sortedKeys.find { it >= letter }
+                                        if (key != null) {
+                                            val index = sortedKeys.indexOf(key)
+                                            var itemIndex = 0
+                                            for (i in 0 until index) {
+                                                itemIndex += 1 // Header
+                                                itemIndex += groupedContacts[sortedKeys[i]]!!.size
+                                            }
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(itemIndex)
+                                            }
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
+            }
+            
+            // Only show central spinner if we are not refreshing via pull-to-refresh
+            // and we have no data.
+            if (isLoading && contactModels.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
     }

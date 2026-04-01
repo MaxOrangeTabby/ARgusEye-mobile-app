@@ -18,7 +18,9 @@ class ContactsController {
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
 
-    fun fetchContacts() {
+    fun fetchContacts(force: Boolean = false) {
+        if (!force && _contacts.value.isNotEmpty()) return
+
         _isLoading.value = true
         _error.value = null
         CoroutineScope(Dispatchers.IO).launch {

@@ -19,7 +19,9 @@ class HomeController {
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
 
-    fun fetchUnlabeledPeople() {
+    fun fetchUnlabeledPeople(force: Boolean = false) {
+        if (!force && _unlabeledPeople.value.isNotEmpty()) return
+        
         _isLoading.value = true
         _error.value = null
         CoroutineScope(Dispatchers.IO).launch {
@@ -39,7 +41,7 @@ class HomeController {
             try {
                 RetrofitClient.apiService.labelPerson(personId, LabelRequest(name))
                 // Refresh the list after successful labeling
-                fetchUnlabeledPeople()
+                fetchUnlabeledPeople(force = true)
                 CoroutineScope(Dispatchers.Main).launch {
                     onComplete()
                 }
@@ -50,7 +52,6 @@ class HomeController {
     }
 
     fun dismissPerson(personId: Int) {
-        // For now, just remove from the local list if "No" is confirmed without a name
         _unlabeledPeople.value = _unlabeledPeople.value.filter { it.id != personId }
     }
 }
