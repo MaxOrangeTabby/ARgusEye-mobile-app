@@ -4,6 +4,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,10 +13,13 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.argus_eye.data.model.ContactModel
 import com.google.firebase.auth.FirebaseUser
 
@@ -90,9 +94,8 @@ fun HomeCard(
     onLabel: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedOption by remember { mutableStateOf<Boolean?>(null) }
     var nameInput by remember { mutableStateOf("") }
-    val isEnterEnabled = selectedOption == true || (selectedOption == false && nameInput.isNotBlank())
+    val isEnterEnabled = nameInput.isNotBlank()
 
     Card(
         modifier = Modifier
@@ -102,104 +105,57 @@ fun HomeCard(
         shape = RoundedCornerShape(4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Profile Image
+            AsyncImage(
+                model = person.profileImageBytes,
+                contentDescription = "Profile Image",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, Color(0xFFFFD54F), CircleShape),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "Was your recent conversation with ${person.name}?",
+                text = "Who is this?",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF5A6978)
                 )
             )
+            
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Yes Button
-                val isYesSelected = selectedOption == true
-                Button(
-                    onClick = { selectedOption = true },
-                    shape = RoundedCornerShape(4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isYesSelected) Color(0xFF6750A4) else Color.White,
-                        contentColor = if (isYesSelected) Color.White else Color(0xFF6750A4)
-                    ),
-                    border = if (!isYesSelected) ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFD1D9E0))) else null,
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Text("Yes", fontWeight = FontWeight.Bold)
-                }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // No Button
-                val isNoSelected = selectedOption == false
-                Button(
-                    onClick = { selectedOption = false },
-                    shape = RoundedCornerShape(4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isNoSelected) Color(0xFF6750A4) else Color.White,
-                        contentColor = if (isNoSelected) Color.White else Color(0xFF6750A4)
-                    ),
-                    border = if (!isNoSelected) ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFD1D9E0))) else null,
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Text("No", fontWeight = FontWeight.Bold)
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-                person.lastSeen?.let {
-                    Text(
-                        text = it.split("T")[0], // Simple date display
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF5A6978)
-                        )
-                    )
-                }
-            }
-
-            if (selectedOption == false) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Enter their name",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF5A6978)
-                    )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = nameInput,
-                    onValueChange = { nameInput = it },
-                    placeholder = { Text("Example: Peter", color = Color(0xFFD1D9E0)) },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(4.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color(0xFFD1D9E0)
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            if (isEnterEnabled) {
-                                if (selectedOption == true) onLabel(person.name)
-                                else onLabel(nameInput)
-                            }
+            OutlinedTextField(
+                value = nameInput,
+                onValueChange = { nameInput = it },
+                placeholder = { Text("Enter name (e.g. Peter)", color = Color(0xFFD1D9E0)) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(4.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color(0xFFD1D9E0),
+                    focusedBorderColor = Color(0xFF6750A4)
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (isEnterEnabled) {
+                            onLabel(nameInput)
                         }
-                    )
-                )
-            }
+                    }
+                ),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {
-                    if (selectedOption == true) onLabel(person.name)
-                    else onLabel(nameInput)
-                },
+                onClick = { onLabel(nameInput) },
                 enabled = isEnterEnabled,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
@@ -211,7 +167,7 @@ fun HomeCard(
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = "ENTER",
+                    text = "SAVE NAME",
                     fontWeight = FontWeight.Bold
                 )
             }

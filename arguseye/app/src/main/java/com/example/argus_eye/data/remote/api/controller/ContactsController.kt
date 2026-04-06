@@ -3,6 +3,7 @@ package com.example.argus_eye.data.remote.api.controller
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.example.argus_eye.data.model.ContactModel
+import com.example.argus_eye.data.model.UpdateNotesRequest
 import com.example.argus_eye.data.remote.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,34 @@ class ContactsController {
                 _contacts.value = response.sortedBy { it.name }
             } catch (e: Exception) {
                 _error.value = e.message ?: "An unknown error occurred"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateNotes(contactId: Int, notes: String, onSuccess: (ContactModel) -> Unit) {
+        _isLoading.value = true
+        _error.value = null
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val updatedContact = RetrofitClient.apiService.updateNotes(
+                    contactId,
+                    UpdateNotesRequest(notes)
+                )
+                // Update the local list if necessary
+                val currentList = _contacts.value.toMutableList()
+                val index = currentList.indexOfFirst { it.id == contactId }
+                if (index != -1) {
+                    currentList[index] = updatedContact
+                    _contacts.value = currentList
+                }
+                
+                launch(Dispatchers.Main) {
+                    onSuccess(updatedContact)
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to update notes"
             } finally {
                 _isLoading.value = false
             }

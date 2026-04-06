@@ -3,6 +3,7 @@ package com.example.argus_eye.data.remote.api
 import com.example.argus_eye.data.model.ContactModel
 import com.example.argus_eye.data.model.LabelRequest
 import com.example.argus_eye.data.model.LabelResponse
+import com.example.argus_eye.data.model.UpdateNotesRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -20,4 +21,10 @@ interface ApiService {
         @Path("id") personId: Int,
         @Body request: LabelRequest
     ): LabelResponse
+
+    @POST("api/people/{id}/notes")
+    suspend fun updateNotes(
+        @Path("id") personId: Int,
+        @Body request: UpdateNotesRequest
+    ): ContactModel
 }

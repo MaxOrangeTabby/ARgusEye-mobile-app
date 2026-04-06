@@ -163,6 +163,7 @@ fun MainView(
                     selectedContact?.let { contact ->
                         ContactDetailsScreen(
                             contact = contact,
+                            contactsController = contactsController,
                             onBack = { currentScreen = Screen.Contacts }
                         )
                     }
