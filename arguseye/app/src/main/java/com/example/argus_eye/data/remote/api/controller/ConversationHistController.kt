@@ -1,6 +1,7 @@
 package com.example.argus_eye.controller
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import com.example.argus_eye.data.model.InteractionResponse
 import com.example.argus_eye.data.remote.api.RetrofitClient
@@ -17,6 +18,20 @@ class ConversationHistController {
 
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
+
+    val searchQuery = mutableStateOf("")
+
+    val filteredInteractions: State<List<InteractionResponse>> = derivedStateOf {
+        val query = searchQuery.value.trim().lowercase()
+        if (query.isEmpty()) {
+            _interactions.value
+        } else {
+            _interactions.value.filter {
+                it.personName?.lowercase()?.contains(query) == true ||
+                        it.interactionId.toString().contains(query)
+            }
+        }
+    }
 
     fun fetchInteractions(force: Boolean = false) {
         if (!force && _interactions.value.isNotEmpty()) return

@@ -38,10 +38,23 @@ fun MainView(
     var currentScreen by remember { mutableStateOf(Screen.Home) }
     var selectedContact by remember { mutableStateOf<ContactModel?>(null) }
     var selectedInteraction by remember { mutableStateOf<InteractionResponse?>(null) }
+    // Track where we entered the conversation details from
+    var conversationEntrySource by remember { mutableStateOf(Screen.Conversations) }
+    // Track where we entered the contact details from
+    var contactEntrySource by remember { mutableStateOf(Screen.Contacts) }
     
     val homeController = remember { HomeController() }
     val contactsController = remember { ContactsController() }
     val conversationController = remember { ConversationHistController() }
+
+    val navigateToContact: (Int, Screen) -> Unit = { personId, source ->
+        val contact = contactsController.contacts.value.find { it.id == personId }
+        if (contact != null) {
+            selectedContact = contact
+            contactEntrySource = source
+            currentScreen = Screen.ContactDetails
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -159,6 +172,7 @@ fun MainView(
                         onRetry = { contactsController.fetchContacts(force = true) },
                         onContactClick = { contact ->
                             selectedContact = contact
+                            contactEntrySource = Screen.Contacts
                             currentScreen = Screen.ContactDetails
                         },
                         onRefresh = { contactsController.fetchContacts(force = true) }
@@ -169,30 +183,44 @@ fun MainView(
                         ContactDetailsScreen(
                             contact = contact,
                             contactsController = contactsController,
-                            onBack = { currentScreen = Screen.Contacts }
+                            conversationController = conversationController,
+                            onBack = { currentScreen = contactEntrySource },
+                            onInteractionClick = { interaction ->
+                                selectedInteraction = interaction
+                                conversationEntrySource = Screen.ContactDetails
+                                currentScreen = Screen.ConversationDetails
+                            }
                         )
                     }
                 }
                 Screen.Conversations -> {
                     LaunchedEffect(Unit) {
                         conversationController.fetchInteractions()
+                        contactsController.fetchContacts() // Ensure contacts are loaded for navigation
                     }
                     ConversationListScreen(
-                        interactions = conversationController.interactions.value,
+                        interactions = conversationController.filteredInteractions.value,
                         isLoading = conversationController.isLoading.value,
                         error = conversationController.error.value,
+                        searchQuery = conversationController.searchQuery.value,
+                        onSearchQueryChange = { conversationController.searchQuery.value = it },
                         onRefresh = { conversationController.fetchInteractions(force = true) },
                         onViewTranscription = { interaction ->
                             selectedInteraction = interaction
+                            conversationEntrySource = Screen.Conversations
                             currentScreen = Screen.ConversationDetails
-                        }
+                        },
+                        onPersonClick = { personId -> navigateToContact(personId, Screen.Conversations) }
                     )
                 }
                 Screen.ConversationDetails -> {
                     selectedInteraction?.let { interaction ->
                         TranscriptionDetailScreen(
                             interaction = interaction,
-                            onBack = { currentScreen = Screen.Conversations }
+                            onBack = { 
+                                currentScreen = conversationEntrySource
+                            },
+                            onPersonClick = { personId -> navigateToContact(personId, Screen.ConversationDetails) }
                         )
                     }
                 }

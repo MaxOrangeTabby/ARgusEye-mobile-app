@@ -1,6 +1,8 @@
 package com.example.argus_eye.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +18,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.argus_eye.controller.ConversationHistController
 import com.example.argus_eye.data.model.ContactModel
+import com.example.argus_eye.data.model.InteractionResponse
 import com.example.argus_eye.data.remote.api.controller.ContactsController
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,14 +28,22 @@ import com.example.argus_eye.data.remote.api.controller.ContactsController
 fun ContactDetailsScreen(
     contact: ContactModel,
     contactsController: ContactsController,
-    onBack: () -> Unit
+    conversationController: ConversationHistController,
+    onBack: () -> Unit,
+    onInteractionClick: (InteractionResponse) -> Unit
 ) {
     var notes by remember(contact.id) { mutableStateOf(contact.notes ?: "") }
     val isLoading = contactsController.isLoading.value
     val error = contactsController.error.value
+    
+    val interactions = conversationController.interactions.value.filter { it.personId == contact.id }
+
+    LaunchedEffect(contact.id) {
+        conversationController.fetchInteractions()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Custom Top Bar similar to the image
+        // Custom Top Bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -57,7 +69,7 @@ fun ContactDetailsScreen(
                 IconButton(
                     onClick = {
                         contactsController.updateNotes(contact.id, notes) {
-                            // Optionally handle success (e.g., show a toast or hide keyboard)
+                            // Optionally handle success
                         }
                     },
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp),
@@ -80,10 +92,12 @@ fun ContactDetailsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            
             if (error != null) {
                 Text(
                     text = error,
@@ -149,6 +163,73 @@ fun ContactDetailsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Conversations Section
+            Text(
+                text = "CONVERSATION HISTORY:",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5A6978),
+                    fontSize = 16.sp
+                ),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+
+            if (interactions.isEmpty()) {
+                Text(
+                    text = "No conversations found.",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            } else {
+                interactions.forEach { interaction ->
+                    InteractionItem(interaction) { onInteractionClick(interaction) }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun InteractionItem(interaction: InteractionResponse, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFFD1D9E0), RoundedCornerShape(8.dp))
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+            .padding(16.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "ID: ${interaction.interactionId}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Color(0xFF5C6BC0)
+                )
+                Text(
+                    text = interaction.timestamp.split("T").getOrNull(0) ?: interaction.timestamp,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = interaction.context,
+                fontSize = 13.sp,
+                color = Color.DarkGray,
+                maxLines = 2
+            )
         }
     }
 }
