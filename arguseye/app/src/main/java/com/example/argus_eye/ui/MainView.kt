@@ -17,6 +17,7 @@ import com.example.argus_eye.controller.ConversationHistController
 import com.example.argus_eye.data.model.InteractionResponse
 import com.example.argus_eye.data.remote.api.controller.ContactsController
 import com.example.argus_eye.data.remote.api.controller.HomeController
+import java.util.Stack
 
 enum class Screen {
     Home,
@@ -35,24 +36,35 @@ fun MainView(
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var currentScreen by remember { mutableStateOf(Screen.Home) }
+    var navigationStack by remember { mutableStateOf(listOf(Screen.Home)) }
+    val currentScreen = navigationStack.last()
+    
     var selectedContact by remember { mutableStateOf<ContactModel?>(null) }
     var selectedInteraction by remember { mutableStateOf<InteractionResponse?>(null) }
-    // Track where we entered the conversation details from
-    var conversationEntrySource by remember { mutableStateOf(Screen.Conversations) }
-    // Track where we entered the contact details from
-    var contactEntrySource by remember { mutableStateOf(Screen.Contacts) }
     
     val homeController = remember { HomeController() }
     val contactsController = remember { ContactsController() }
     val conversationController = remember { ConversationHistController() }
 
-    val navigateToContact: (Int, Screen) -> Unit = { personId, source ->
+    fun navigateTo(screen: Screen) {
+        if (screen in listOf(Screen.Home, Screen.Contacts, Screen.Conversations, Screen.You)) {
+            navigationStack = listOf(screen)
+        } else {
+            navigationStack = navigationStack + screen
+        }
+    }
+
+    fun navigateBack() {
+        if (navigationStack.size > 1) {
+            navigationStack = navigationStack.dropLast(1)
+        }
+    }
+
+    val navigateToContact: (Int) -> Unit = { personId ->
         val contact = contactsController.contacts.value.find { it.id == personId }
         if (contact != null) {
             selectedContact = contact
-            contactEntrySource = source
-            currentScreen = Screen.ContactDetails
+            navigateTo(Screen.ContactDetails)
         }
     }
 
@@ -91,7 +103,7 @@ fun MainView(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                         label = { Text("Home") },
                         selected = currentScreen == Screen.Home,
-                        onClick = { currentScreen = Screen.Home },
+                        onClick = { navigateTo(Screen.Home) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF6750A4),
                             selectedTextColor = Color(0xFF6750A4),
@@ -104,7 +116,7 @@ fun MainView(
                         icon = { Icon(Icons.Default.People, contentDescription = "Contacts") },
                         label = { Text("Contacts") },
                         selected = currentScreen == Screen.Contacts || currentScreen == Screen.ContactDetails,
-                        onClick = { currentScreen = Screen.Contacts },
+                        onClick = { navigateTo(Screen.Contacts) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF6750A4),
                             selectedTextColor = Color(0xFF6750A4),
@@ -117,7 +129,7 @@ fun MainView(
                         icon = { Icon(Icons.Default.ChatBubble, contentDescription = "Conversations") },
                         label = { Text("Conversations") },
                         selected = currentScreen == Screen.Conversations || currentScreen == Screen.ConversationDetails,
-                        onClick = { currentScreen = Screen.Conversations },
+                        onClick = { navigateTo(Screen.Conversations) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF6750A4),
                             selectedTextColor = Color(0xFF6750A4),
@@ -130,7 +142,7 @@ fun MainView(
                         icon = { Icon(Icons.Default.AccountCircle, contentDescription = "You") },
                         label = { Text("You") },
                         selected = currentScreen == Screen.You,
-                        onClick = { currentScreen = Screen.You },
+                        onClick = { navigateTo(Screen.You) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF6750A4),
                             selectedTextColor = Color(0xFF6750A4),
@@ -172,8 +184,7 @@ fun MainView(
                         onRetry = { contactsController.fetchContacts(force = true) },
                         onContactClick = { contact ->
                             selectedContact = contact
-                            contactEntrySource = Screen.Contacts
-                            currentScreen = Screen.ContactDetails
+                            navigateTo(Screen.ContactDetails)
                         },
                         onRefresh = { contactsController.fetchContacts(force = true) }
                     )
@@ -184,11 +195,10 @@ fun MainView(
                             contact = contact,
                             contactsController = contactsController,
                             conversationController = conversationController,
-                            onBack = { currentScreen = contactEntrySource },
+                            onBack = { navigateBack() },
                             onInteractionClick = { interaction ->
                                 selectedInteraction = interaction
-                                conversationEntrySource = Screen.ContactDetails
-                                currentScreen = Screen.ConversationDetails
+                                navigateTo(Screen.ConversationDetails)
                             }
                         )
                     }
@@ -196,7 +206,7 @@ fun MainView(
                 Screen.Conversations -> {
                     LaunchedEffect(Unit) {
                         conversationController.fetchInteractions()
-                        contactsController.fetchContacts() // Ensure contacts are loaded for navigation
+                        contactsController.fetchContacts()
                     }
                     ConversationListScreen(
                         interactions = conversationController.filteredInteractions.value,
@@ -207,20 +217,17 @@ fun MainView(
                         onRefresh = { conversationController.fetchInteractions(force = true) },
                         onViewTranscription = { interaction ->
                             selectedInteraction = interaction
-                            conversationEntrySource = Screen.Conversations
-                            currentScreen = Screen.ConversationDetails
+                            navigateTo(Screen.ConversationDetails)
                         },
-                        onPersonClick = { personId -> navigateToContact(personId, Screen.Conversations) }
+                        onPersonClick = { personId -> navigateToContact(personId) }
                     )
                 }
                 Screen.ConversationDetails -> {
                     selectedInteraction?.let { interaction ->
                         TranscriptionDetailScreen(
                             interaction = interaction,
-                            onBack = { 
-                                currentScreen = conversationEntrySource
-                            },
-                            onPersonClick = { personId -> navigateToContact(personId, Screen.ConversationDetails) }
+                            onBack = { navigateBack() },
+                            onPersonClick = { personId -> navigateToContact(personId) }
                         )
                     }
                 }

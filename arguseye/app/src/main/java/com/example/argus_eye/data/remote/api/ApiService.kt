@@ -11,7 +11,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-    @GET("api/people")
+    @GET("api/people/labeled")
     suspend fun getContacts(): List<ContactModel>
 
     @GET("api/people/unlabeled")
@@ -29,6 +29,6 @@ interface ApiService {
         @Body request: UpdateNotesRequest
     ): ContactModel
 
-    @GET("api/interactions")
+    @GET("api/interactions/labeled")
     suspend fun getInteractions(): List<InteractionResponse>
 }
