@@ -3,6 +3,7 @@ package com.example.argus_eye.core
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +49,11 @@ class MainActivity : ComponentActivity() {
             ArguseyeTheme {
                 var currentScreen by remember { 
                     mutableStateOf(if (authManager.getCurrentUser() != null) Screen.Main else Screen.Landing) 
+                }
+
+                // Handle back button for top-level authentication screens
+                BackHandler(enabled = currentScreen == Screen.Login || currentScreen == Screen.Register) {
+                    currentScreen = Screen.Landing
                 }
 
                 Scaffold(modifier = Modifier.Companion.fillMaxSize()) { innerPadding ->

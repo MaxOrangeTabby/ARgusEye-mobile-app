@@ -1,5 +1,6 @@
 package com.example.argus_eye.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -58,6 +59,10 @@ fun MainView(
         if (navigationStack.size > 1) {
             navigationStack = navigationStack.dropLast(1)
         }
+    }
+
+    BackHandler(enabled = navigationStack.size > 1) {
+        navigateBack()
     }
 
     val navigateToContact: (Int) -> Unit = { personId ->

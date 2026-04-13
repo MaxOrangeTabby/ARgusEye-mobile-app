@@ -8,8 +8,11 @@ import com.example.argus_eye.data.remote.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
-class ConversationHistController {
+class ConversationHistController(
+    private val ioContext: CoroutineContext = Dispatchers.IO
+) {
     private val _interactions = mutableStateOf<List<InteractionResponse>>(emptyList())
     val interactions: State<List<InteractionResponse>> = _interactions
 
@@ -38,7 +41,7 @@ class ConversationHistController {
 
         _isLoading.value = true
         _error.value = null
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioContext).launch {
             try {
                 val response = RetrofitClient.apiService.getInteractions()
                 _interactions.value = response

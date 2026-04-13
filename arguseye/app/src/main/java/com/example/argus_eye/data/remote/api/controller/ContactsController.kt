@@ -8,8 +8,12 @@ import com.example.argus_eye.data.remote.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
-class ContactsController {
+class ContactsController(
+    private val ioContext: CoroutineContext = Dispatchers.IO,
+    private val mainContext: CoroutineContext = Dispatchers.Main
+) {
     private val _contacts = mutableStateOf<List<ContactModel>>(emptyList())
     val contacts: State<List<ContactModel>> = _contacts
 
@@ -24,7 +28,7 @@ class ContactsController {
 
         _isLoading.value = true
         _error.value = null
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioContext).launch {
             try {
                 val response = RetrofitClient.apiService.getContacts()
                 _contacts.value = response.sortedBy { it.name }
@@ -39,7 +43,7 @@ class ContactsController {
     fun updateNotes(contactId: Int, notes: String, onSuccess: (ContactModel) -> Unit) {
         _isLoading.value = true
         _error.value = null
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioContext).launch {
             try {
                 val updatedContact = RetrofitClient.apiService.updateNotes(
                     contactId,
@@ -53,7 +57,7 @@ class ContactsController {
                     _contacts.value = currentList
                 }
                 
-                launch(Dispatchers.Main) {
+                launch(mainContext) {
                     onSuccess(updatedContact)
                 }
             } catch (e: Exception) {

@@ -8,8 +8,12 @@ import com.example.argus_eye.data.remote.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
-class HomeController {
+class HomeController(
+    private val ioContext: CoroutineContext = Dispatchers.IO,
+    private val mainContext: CoroutineContext = Dispatchers.Main
+) {
     private val _unlabeledPeople = mutableStateOf<List<ContactModel>>(emptyList())
     val unlabeledPeople: State<List<ContactModel>> = _unlabeledPeople
 
@@ -24,7 +28,7 @@ class HomeController {
         
         _isLoading.value = true
         _error.value = null
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioContext).launch {
             try {
                 val response = RetrofitClient.apiService.getUnlabeledPeople()
                 _unlabeledPeople.value = response
@@ -37,12 +41,12 @@ class HomeController {
     }
 
     fun labelPerson(personId: Int, name: String, onComplete: () -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioContext).launch {
             try {
                 RetrofitClient.apiService.labelPerson(personId, LabelRequest(name))
                 // Refresh the list after successful labeling
                 fetchUnlabeledPeople(force = true)
-                CoroutineScope(Dispatchers.Main).launch {
+                CoroutineScope(mainContext).launch {
                     onComplete()
                 }
             } catch (e: Exception) {

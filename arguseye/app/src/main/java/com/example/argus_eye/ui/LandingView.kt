@@ -1,10 +1,12 @@
 package com.example.argus_eye.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.argus_eye.ui.theme.ArguseyeTheme
 
 @Composable
@@ -25,42 +28,47 @@ fun LandingView(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color(0xFFF5F5F5)) // Light background
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Placeholder for the circular image/icon
+        // Branded Logo
         Box(
             modifier = Modifier
-                .size(150.dp)
-                .border(2.dp, Color.LightGray, CircleShape)
-                .padding(20.dp),
+                .size(160.dp)
+                .background(Color.White, CircleShape)
+                .border(4.dp, Color(0xFFFFD54F), CircleShape) // Brand Gold
+                .padding(32.dp),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
+                imageVector = Icons.Default.Visibility,
+                contentDescription = "ARgusEye Logo",
                 modifier = Modifier.fillMaxSize(),
-                tint = Color.LightGray
+                tint = Color(0xFF6750A4) // Brand Purple
             )
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Welcome to ARgusEye",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF37474F)
+            text = "ARgusEye",
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF6750A4),
+                letterSpacing = 2.sp
             ),
             textAlign = TextAlign.Center
         )
 
         Text(
-            text = "Please Log in to begin",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = Color(0xFF37474F)
+            text = "Intelligence through insight",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = Color(0xFF5A6978),
+                fontWeight = FontWeight.Medium
             ),
+            modifier = Modifier.padding(top = 8.dp),
             textAlign = TextAlign.Center
         )
 
@@ -70,17 +78,19 @@ fun LandingView(
         Button(
             onClick = onLoginClick,
             modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(50.dp),
+                .fillMaxWidth(0.8f)
+                .height(56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF6750A4)
             ),
-            shape = MaterialTheme.shapes.extraSmall
+            shape = RoundedCornerShape(12.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
             Text(
                 text = "Log in",
                 color = Color.White,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
             )
         }
 
@@ -90,17 +100,18 @@ fun LandingView(
         OutlinedButton(
             onClick = onRegisterClick,
             modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(50.dp),
+                .fillMaxWidth(0.8f)
+                .height(56.dp),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = Color(0xFF6750A4)
             ),
-            shape = MaterialTheme.shapes.extraSmall,
-            border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFEADDFF)))
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF6750A4))
         ) {
             Text(
                 text = "Register",
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
             )
         }
     }
