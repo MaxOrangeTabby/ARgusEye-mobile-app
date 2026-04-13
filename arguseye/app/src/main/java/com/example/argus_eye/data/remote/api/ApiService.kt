@@ -1,6 +1,7 @@
 package com.example.argus_eye.data.remote.api
 
 import com.example.argus_eye.data.model.ContactModel
+import com.example.argus_eye.data.model.InteractionResponse
 import com.example.argus_eye.data.model.LabelRequest
 import com.example.argus_eye.data.model.LabelResponse
 import com.example.argus_eye.data.model.UpdateNotesRequest
@@ -27,4 +28,7 @@ interface ApiService {
         @Path("id") personId: Int,
         @Body request: UpdateNotesRequest
     ): ContactModel
+
+    @GET("api/interactions")
+    suspend fun getInteractions(): List<InteractionResponse>
 }

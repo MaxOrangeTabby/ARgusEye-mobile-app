@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.argus_eye.data.model.MainModel
 import com.example.argus_eye.data.remote.api.AuthManager
 import com.example.argus_eye.data.remote.api.MainController
+import com.example.argus_eye.data.remote.api.RetrofitClient
 import com.example.argus_eye.ui.LandingView
 import com.example.argus_eye.ui.LoginView
 import com.example.argus_eye.ui.RegisterView
@@ -34,6 +35,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize RetrofitClient
+        RetrofitClient.getApiService(this)
 
         val model = MainModel()
         controller = MainController(model)

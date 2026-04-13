@@ -1,5 +1,7 @@
 package com.example.argus_eye.data.remote.api
 
+import android.content.Context
+import com.example.argus_eye.data.local.PrefManager
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.Interceptor
@@ -9,19 +11,19 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "http://10.0.2.2:5000/"
+    private var retrofit: Retrofit? = null
+    private var _apiService: ApiService? = null
+
+    val apiService: ApiService
+        get() = _apiService ?: throw IllegalStateException("RetrofitClient not initialized. Call getApiService(context) first.")
 
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val user = FirebaseAuth.getInstance().currentUser
-
         val requestBuilder = originalRequest.newBuilder()
 
         if (user != null) {
             try {
-                // Synchronously get the token.
-                // Note: Interceptor.intercept runs on a background thread (OkHttp thread pool),
-                // so this synchronous wait is generally acceptable.
                 val task = user.getIdToken(false)
                 val tokenResult = Tasks.await(task)
                 val token = tokenResult.token
@@ -32,25 +34,27 @@ object RetrofitClient {
                 e.printStackTrace()
             }
         }
-
         chain.proceed(requestBuilder.build())
-    }
-
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
-        .addInterceptor(loggingInterceptor)
+        .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
         .build()
 
-    val apiService: ApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ApiService::class.java)
+    // This function will recreate the ApiService using the latest URL from SharedPreferences
+    fun getApiService(context: Context): ApiService {
+        val baseUrl = PrefManager(context).getBaseUrl()
+
+        // Check if we need to rebuild (if URL changed or first time)
+        if (retrofit == null || retrofit?.baseUrl().toString() != baseUrl) {
+            retrofit = Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            _apiService = retrofit!!.create(ApiService::class.java)
+        }
+        return _apiService!!
     }
 }

@@ -1,42 +1,37 @@
 package com.example.argus_eye.controller
 
-import com.example.argus_eye.data.model.Conversation
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import com.example.argus_eye.data.model.InteractionResponse
+import com.example.argus_eye.data.remote.api.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ConversationHistController {
+    private val _interactions = mutableStateOf<List<InteractionResponse>>(emptyList())
+    val interactions: State<List<InteractionResponse>> = _interactions
 
-    fun getConversations(): List<Conversation> {
-        return listOf(
-            Conversation(
-                uid = "23857128740",
-                timestamp = "17:38PM 9/13/2004",
-                participants = listOf("Person 1", "Person 2", "Person 3"),
-                notes = listOf("NOTE 1", "NOTE 2", "NOTE 3")
-            ),
-            Conversation(
-                uid = "99912345678",
-                timestamp = "09:15AM 3/4/2026",
-                participants = listOf("Alice", "Bob"),
-                notes = listOf("NOTE A", "NOTE B")
-            ),
-            Conversation(
-                uid = "11122233344",
-                timestamp = "14:00PM 1/1/2025",
-                participants = listOf("Dan", "Eve", "Frank"),
-                notes = listOf("Meeting note 1", "Meeting note 2")
-            )
-        )
-    }
+    private val _isLoading = mutableStateOf(false)
+    val isLoading: State<Boolean> = _isLoading
 
-    fun getConversation(): Conversation {
-        return Conversation(
-            uid = "23857128740",
-            timestamp = "17:38PM 9/13/2004",
-            participants = listOf("Person 1", "Person 2", "Person 3"),
-            notes = listOf("NOTE 1", "NOTE 2", "NOTE 3")
-        )
-    }
+    private val _error = mutableStateOf<String?>(null)
+    val error: State<String?> = _error
 
-    fun getFullTranscription(uid: String): String {
-        return "Full transcription for UID: $uid"
+    fun fetchInteractions(force: Boolean = false) {
+        if (!force && _interactions.value.isNotEmpty()) return
+
+        _isLoading.value = true
+        _error.value = null
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.getInteractions()
+                _interactions.value = response
+            } catch (e: Exception) {
+                _error.value = e.message ?: "An unknown error occurred"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 }

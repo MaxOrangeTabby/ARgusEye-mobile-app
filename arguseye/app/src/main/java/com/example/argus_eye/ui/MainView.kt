@@ -14,6 +14,7 @@ import com.example.argus_eye.data.remote.api.MainController
 import com.example.argus_eye.data.model.ContactModel
 import com.google.firebase.auth.FirebaseUser
 import com.example.argus_eye.controller.ConversationHistController
+import com.example.argus_eye.data.model.InteractionResponse
 import com.example.argus_eye.data.remote.api.controller.ContactsController
 import com.example.argus_eye.data.remote.api.controller.HomeController
 
@@ -21,6 +22,7 @@ enum class Screen {
     Home,
     Contacts,
     Conversations,
+    ConversationDetails,
     You,
     ContactDetails
 }
@@ -35,14 +37,16 @@ fun MainView(
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Home) }
     var selectedContact by remember { mutableStateOf<ContactModel?>(null) }
+    var selectedInteraction by remember { mutableStateOf<InteractionResponse?>(null) }
     
     val homeController = remember { HomeController() }
     val contactsController = remember { ContactsController() }
+    val conversationController = remember { ConversationHistController() }
 
     Scaffold(
         modifier = modifier,
         topBar = {
-            if (currentScreen != Screen.ContactDetails) {
+            if (currentScreen != Screen.ContactDetails && currentScreen != Screen.ConversationDetails) {
                 Column {
                     CenterAlignedTopAppBar(
                         title = {
@@ -65,7 +69,7 @@ fun MainView(
             }
         },
         bottomBar = {
-            if (currentScreen != Screen.ContactDetails) {
+            if (currentScreen != Screen.ContactDetails && currentScreen != Screen.ConversationDetails) {
                 NavigationBar(
                     containerColor = Color.White,
                     contentColor = Color(0xFF6750A4)
@@ -99,7 +103,7 @@ fun MainView(
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.ChatBubble, contentDescription = "Conversations") },
                         label = { Text("Conversations") },
-                        selected = currentScreen == Screen.Conversations,
+                        selected = currentScreen == Screen.Conversations || currentScreen == Screen.ConversationDetails,
                         onClick = { currentScreen = Screen.Conversations },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF6750A4),
@@ -126,7 +130,8 @@ fun MainView(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(if (currentScreen == Screen.ContactDetails) PaddingValues(0.dp) else innerPadding)) {
+        val hidePadding = currentScreen == Screen.ContactDetails || currentScreen == Screen.ConversationDetails
+        Box(modifier = Modifier.padding(if (hidePadding) PaddingValues(0.dp) else innerPadding)) {
             when (currentScreen) {
                 Screen.Home -> {
                     LaunchedEffect(Unit) {
@@ -169,11 +174,27 @@ fun MainView(
                     }
                 }
                 Screen.Conversations -> {
-                    val conversationController = remember { ConversationHistController() }
+                    LaunchedEffect(Unit) {
+                        conversationController.fetchInteractions()
+                    }
                     ConversationListScreen(
-                        conversations = conversationController.getConversations(),
-                        onViewTranscription = { /* Handle transcription view */ }
+                        interactions = conversationController.interactions.value,
+                        isLoading = conversationController.isLoading.value,
+                        error = conversationController.error.value,
+                        onRefresh = { conversationController.fetchInteractions(force = true) },
+                        onViewTranscription = { interaction ->
+                            selectedInteraction = interaction
+                            currentScreen = Screen.ConversationDetails
+                        }
                     )
+                }
+                Screen.ConversationDetails -> {
+                    selectedInteraction?.let { interaction ->
+                        TranscriptionDetailScreen(
+                            interaction = interaction,
+                            onBack = { currentScreen = Screen.Conversations }
+                        )
+                    }
                 }
                 Screen.You -> {
                     ProfileScreen(user = user, onLogoutClick = onLogoutClick)
