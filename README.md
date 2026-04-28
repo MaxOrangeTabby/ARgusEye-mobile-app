@@ -39,7 +39,7 @@ Neo4j knowledge graph ◄───────┴──────────�
 
 | Repo | What it is |
 |---|---|
-| **[ARsenal-Ravengers](https://github.com/murphymy04/ARsenal-Ravengers)** | Backend — face detection, transcription, knowledge graph, People API |
+| **[ArgusEye](https://github.com/murphymy04/argus)** | Backend — face detection, transcription, knowledge graph, People API |
 | **[ArgusEye Glasses App](https://github.com/MaxOrangeTabby/ARgusEye-glasses-app-v2)** | Unity Android app — runs on the Inmo Air 3 (or any Android phone) as the camera, mic, and HUD |
 | **ArgusEye Mobile App** *(this repo)* | Android companion app — label faces and review conversations |
 
